@@ -19,7 +19,7 @@ namespace Interview.Web.Controllers
             _db = db;
         }
 
-        [HttpGet]
+        [HttpGet("{productId:guid}")]
         public async Task<IActionResult> GetInventoryByProductId(Guid productId)
         {
             var inventory = await _db.InventoryTransactions.Where(t => t.ProductId == productId).ToListAsync();

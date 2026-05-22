@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Interview.Web.Data;
 using Interview.Web.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Interview.Web.Controllers
 {
@@ -20,14 +19,45 @@ namespace Interview.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateInventoryTransaction(InventoryTransaction inventoryTransaction)
+        public async Task<IActionResult> CreateInventoryTransaction([FromBody] InventoryTransactionCreateDto dto)
         {
-            _db.InventoryTransactions.Add(inventoryTransaction);
+            if (dto == null)
+                return BadRequest();
+
+            if (dto.Quantity == 0)
+                return BadRequest("Quantity must not be zero.");
+
+            var productExists = await _db.Products.AnyAsync(p => p.Id == dto.ProductId);
+            if (!productExists)
+                return NotFound($"Product '{dto.ProductId}' was not found.");
+
+            var transaction = new InventoryTransaction
+            {
+                ProductId = dto.ProductId,
+                Quantity = dto.Quantity,
+                Type = dto.Type
+            };
+
+            _db.InventoryTransactions.Add(transaction);
             await _db.SaveChangesAsync();
-            
-            return Ok("Inventory transaction made successfully");
+
+            return Created(
+                $"/api/v1/inventory-transactions/{transaction.TransactionId}",
+                new
+                {
+                    transaction.TransactionId,
+                    transaction.ProductId,
+                    transaction.Quantity,
+                    transaction.Type,
+                    transaction.CreatedAt
+                });
         }
 
-        
+        [HttpGet("{productId:guid}")]
+        public async Task<IActionResult> GetInventoryTransactionsByProductId(Guid productId)
+        {
+            var transactions = await _db.InventoryTransactions.Where(t => t.ProductId == productId).ToListAsync();
+            return Ok(transactions);
+        }
     }
 }

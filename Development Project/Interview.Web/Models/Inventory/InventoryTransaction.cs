@@ -16,9 +16,7 @@ namespace Interview.Web.Models
     {
         Adjustment,
         Purchase,
-        Sale,
-        Return,
-        Transfer
+        Sale
     }
 
 }

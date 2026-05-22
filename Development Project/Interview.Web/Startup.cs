@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Interview.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace Interview.Web
 {
@@ -25,7 +26,11 @@ namespace Interview.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 
             // Configure ApplicationDbContext - uses DefaultConnection from configuration
             services.AddDbContext<ApplicationDbContext>(options =>
