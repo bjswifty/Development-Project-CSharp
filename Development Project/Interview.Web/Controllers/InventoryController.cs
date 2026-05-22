@@ -20,22 +20,13 @@ namespace Interview.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetInventory(Guid productId)
+        public async Task<IActionResult> GetInventoryByProductId(Guid productId)
         {
-            var products = await _db.Products.Include(p => p.ProductCategories)
-                    .ThenInclude(pc => pc.Category)
-                    .ToListAsync();
-
-            var result = products.Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Description,
-                p.Price,
-                Metadata = p.Metadata,
-                Categories = p.ProductCategories.Select(pc => pc.Category.Name)
-            });
-            return Ok(result);
+            var inventory = await _db.InventoryTransactions.Where(t => t.ProductId == productId).ToListAsync();
+            var onHandQuantity = inventory.Sum(i => i.Quantity);
+            return Ok(onHandQuantity);
         }
+
+
     }
 }

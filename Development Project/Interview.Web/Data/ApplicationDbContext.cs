@@ -13,6 +13,7 @@ namespace Interview.Web.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,6 +42,26 @@ namespace Interview.Web.Data
                 .Property(p => p.Metadata)
                 .HasConversion(converter)
                 .HasColumnType("nvarchar(max)");
+
+            modelBuilder.Entity<InventoryTransaction>(entity =>
+            {
+                entity.HasKey(t => t.TransactionId);
+
+                entity.Property(t => t.Quantity)
+                    .HasColumnType("decimal(19,6)");
+
+                entity.Property(t => t.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(32);
+
+                entity.HasOne<Product>()
+                    .WithMany(p => p.InventoryTransactions)
+                    .HasForeignKey(t => t.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(t => t.ProductId);
+                entity.HasIndex(t => new { t.ProductId, t.CreatedAt });
+            });
         }
     }
 }

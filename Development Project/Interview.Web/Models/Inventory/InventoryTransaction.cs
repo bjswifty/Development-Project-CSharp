@@ -6,18 +6,20 @@ namespace Interview.Web.Models
     {
         public Guid TransactionId { get; set; } = Guid.NewGuid();
         public Guid ProductId { get; set; }
-        public int Quantity { get; set; }
+
+        public decimal Quantity { get; set; }
         public InventoryTransactionType Type { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
     }
+
+    public enum InventoryTransactionType
+    {
+        Adjustment,
+        Purchase,
+        Sale,
+        Return,
+        Transfer
+    }
+
 }
 
-public enum InventoryTransactionType
-{
-    Adjustment,
-    Purchase,
-    Sale,
-    Return,
-    Transfer
-}

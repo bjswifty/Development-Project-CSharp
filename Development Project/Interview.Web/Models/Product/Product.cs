@@ -16,5 +16,7 @@ namespace Interview.Web.Models
 
         // Many-to-many categories
         public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
+
+        public ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
     }
 }

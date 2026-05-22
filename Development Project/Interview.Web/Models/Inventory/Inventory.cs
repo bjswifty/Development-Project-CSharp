@@ -2,12 +2,12 @@ using System;
 
 namespace Interview.Web.Models
 {
+    /// <summary>
+    /// Read model for current on-hand quantity (computed from transactions, not stored in DB).
+    /// </summary>
     public class Inventory
     {
-        public Guid TransactionId { get; set; } = Guid.NewGuid();
         public Guid ProductId { get; set; }
-        public int Quantity { get; set; }
-        
+        public decimal OnHandQuantity { get; set; }
     }
-
 }
