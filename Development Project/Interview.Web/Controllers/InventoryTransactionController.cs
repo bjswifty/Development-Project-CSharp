@@ -1,21 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using Interview.Web.Data;
 using Interview.Web.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using Interview.Web.Services;
 
 namespace Interview.Web.Controllers
 {
     [Route("api/v1/inventory-transactions")]
     public class InventoryTransactionController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IInventoryTransactionService _inventoryTransactionService;
 
-        public InventoryTransactionController(ApplicationDbContext db)
+        public InventoryTransactionController(IInventoryTransactionService inventoryTransactionService)
         {
-            _db = db;
+            _inventoryTransactionService = inventoryTransactionService;
         }
 
         [HttpPost]
@@ -27,36 +25,19 @@ namespace Interview.Web.Controllers
             if (dto.Quantity == 0)
                 return BadRequest("Quantity must not be zero.");
 
-            var productExists = await _db.Products.AnyAsync(p => p.Id == dto.ProductId);
-            if (!productExists)
+            var transaction = await _inventoryTransactionService.CreateInventoryTransaction(dto);
+            if (transaction == null)
                 return NotFound($"Product '{dto.ProductId}' was not found.");
-
-            var transaction = new InventoryTransaction
-            {
-                ProductId = dto.ProductId,
-                Quantity = dto.Quantity,
-                Type = dto.Type
-            };
-
-            _db.InventoryTransactions.Add(transaction);
-            await _db.SaveChangesAsync();
 
             return Created(
                 $"/api/v1/inventory-transactions/{transaction.TransactionId}",
-                new
-                {
-                    transaction.TransactionId,
-                    transaction.ProductId,
-                    transaction.Quantity,
-                    transaction.Type,
-                    transaction.CreatedAt
-                });
+                transaction);
         }
 
         [HttpGet("{productId:guid}")]
         public async Task<IActionResult> GetInventoryTransactionsByProductId(Guid productId)
         {
-            var transactions = await _db.InventoryTransactions.Where(t => t.ProductId == productId).ToListAsync();
+            var transactions = await _inventoryTransactionService.GetInventoryTransactionsByProductId(productId);
             return Ok(transactions);
         }
     }
