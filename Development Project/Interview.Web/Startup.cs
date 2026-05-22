@@ -39,6 +39,7 @@ namespace Interview.Web
 
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
+            services.AddScoped<IInventoryService, InventoryService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
