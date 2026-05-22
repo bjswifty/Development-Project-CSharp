@@ -20,9 +20,10 @@ namespace Interview.Web.Controllers
         }
         // NOTE: Sample Action
         [HttpGet]
-        public Task<IActionResult> GetAllProducts()
+        public async Task<IActionResult> GetAllProducts()
         {
-            return Task.FromResult((IActionResult)Ok(new object[] { }));
+            var products = await _db.Products.ToListAsync();
+            return Ok(products);
         }
 
         [HttpPost]
@@ -39,23 +40,41 @@ namespace Interview.Web.Controllers
                 Metadata = dto.Metadata ?? new Dictionary<string, string>()
             };
 
-            // Attach categories (find or create)
-            foreach (var catName in dto.Categories ?? Enumerable.Empty<string>())
+            foreach (var categoryName in dto.Categories)
             {
-                var category = await _db.Categories.FirstOrDefaultAsync(c => c.Name == catName);
-                if (category == null)
+                var existingCategory = await _db.Categories
+                    .FirstOrDefaultAsync(c => c.Name == categoryName);
+
+                if (existingCategory == null)
                 {
-                    category = new Category { Name = catName };
-                    _db.Categories.Add(category);
+                    existingCategory = new Category
+                    {
+                        Name = categoryName
+                    };
+
+                    _db.Categories.Add(existingCategory);
                 }
 
-                product.ProductCategories.Add(new ProductCategory { Product = product, Category = category });
+                product.ProductCategories.Add(new ProductCategory
+                {
+                    Product = product,
+                    Category = existingCategory
+                });
             }
 
             _db.Products.Add(product);
             await _db.SaveChangesAsync();
 
-            return Created($"/api/v1/products/{product.Id}", product);
+            return CreatedAtAction(
+                nameof(ProductController.GetAllProducts),
+                new { id = product.Id },
+                new 
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                }
+                
+            );
         }
     }
 }
