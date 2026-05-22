@@ -68,13 +68,66 @@ namespace Interview.Web.Controllers
             return CreatedAtAction(
                 nameof(ProductController.GetAllProducts),
                 new { id = product.Id },
-                new 
+                new
                 {
                     Id = product.Id,
                     Name = product.Name,
                 }
-                
+
             );
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search(
+    string? query,
+    string? category,
+    string? metaKey,
+    string? metaValue)
+        {
+            var productsQuery = _db.Products
+                .Include(p => p.ProductCategories)
+                    .ThenInclude(pc => pc.Category)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                productsQuery = productsQuery.Where(p =>
+                    p.Name.Contains(query) ||
+                    p.Description.Contains(query));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                productsQuery = productsQuery.Where(p =>
+                    p.ProductCategories.Any(pc =>
+                        pc.Category.Name == category));
+            }
+
+            var products = await productsQuery.ToListAsync();
+
+            // metadata filtering MUST happen in memory
+            if (!string.IsNullOrWhiteSpace(metaKey) &&
+                !string.IsNullOrWhiteSpace(metaValue))
+            {
+                products = products.Where(p =>
+                    p.Metadata != null &&
+                    p.Metadata.TryGetValue(metaKey, out var value) &&
+                    value == metaValue)
+                    .ToList();
+            }
+
+            var result = products.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Price,
+                Metadata = p.Metadata,
+                Categories = p.ProductCategories.Select(pc => pc.Category.Name)
+            });
+
+            return Ok(result);
+        }
+
     }
 }
