@@ -22,8 +22,20 @@ namespace Interview.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _db.Products.ToListAsync();
-            return Ok(products);
+            var products = await _db.Products.Include(p => p.ProductCategories)
+                    .ThenInclude(pc => pc.Category)
+                    .ToListAsync();
+
+            var result = products.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Price,
+                Metadata = p.Metadata,
+                Categories = p.ProductCategories.Select(pc => pc.Category.Name)
+            });
+            return Ok(result);
         }
 
         [HttpPost]
